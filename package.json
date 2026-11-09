@@ -1,0 +1,12 @@
+{
+  "name": "devpulse",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:web": "npm --workspace web run dev",
+    "dev:api": "npm --workspace api run dev"
+  },
+  "workspaces": [
+    "apps/*"
+  ]
+}
