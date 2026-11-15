@@ -3,7 +3,7 @@ import test from "node:test";
 import { isPublicAddress, parseTarget } from "./probe.js";
 
 test("blocks private and metadata IP ranges", () => {
-  for (const ip of ["127.0.0.1", "10.0.0.1", "169.254.169.254", "172.16.1.1", "192.168.1.1", "::1", "fc00::1", "::ffff:127.0.0.1"]) {
+  for (const ip of ["127.0.0.1", "10.0.0.1", "169.254.169.254", "172.16.1.1", "192.168.1.1", "::1", "fc00::1", "::ffff:127.0.0.1", "::ffff:7f00:1", "::ffff:8.8.8.8"]) {
     assert.equal(isPublicAddress(ip), false, ip);
   }
 });
