@@ -13,7 +13,8 @@ export function isPublicAddress(ip: string): boolean {
   }
   if (isIP(ip) === 6) {
     const normalized = ip.toLowerCase();
-    if (normalized.startsWith("::ffff:")) return isPublicAddress(normalized.slice(7));
+    // Reject all IPv4-mapped IPv6 forms, including hexadecimal notation.
+    if (normalized.startsWith("::ffff:")) return false;
     return !(normalized === "::" || normalized === "::1" || normalized.startsWith("fc") || normalized.startsWith("fd") || normalized.startsWith("fe8") || normalized.startsWith("fe9") || normalized.startsWith("fea") || normalized.startsWith("feb") || normalized.startsWith("2001:db8:"));
   }
   return false;
