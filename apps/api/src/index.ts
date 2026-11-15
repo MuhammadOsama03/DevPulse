@@ -6,6 +6,7 @@ import { demoPayload } from "./payload.js";
 import { demoSummary } from "./summary.js";
 import { probe } from "./probe.js";
 import { configuredMonitorTargets } from "./targets.js";
+import { summarizeChecks } from "./check-summary.js";
 
 const app = express();
 app.use(corsForOrigins(config.allowedOrigins));
@@ -22,7 +23,7 @@ app.get("/monitor/checks", async (_req, res) => {
   const results = [];
   for (const target of allowedTargets.slice(0, 10)) results.push(await probe(target));
   res.setHeader("Cache-Control", "no-store");
-  res.json({ source: "live", results });
+  res.json({ source: "live", results, summary: summarizeChecks(results.map(result => ({ ok: result.status === "healthy", latencyMs: result.latencyMs }))) });
 });
 
 app.listen(config.port, () => console.log(`DevPulse API listening on http://localhost:${config.port}`));
