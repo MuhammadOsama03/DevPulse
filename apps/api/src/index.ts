@@ -4,7 +4,7 @@ import { config } from "./config.js";
 import { corsForOrigins } from "./cors.js";
 import { demoPayload } from "./payload.js";
 import { demoSummary } from "./summary.js";
-import { probe } from "./probe.js";
+import { runChecks, startScheduler, monitoringHistory, alertsFor } from "./monitor-runner.js";
 import { configuredMonitorTargets } from "./targets.js";
 import { summarizeChecks } from "./check-summary.js";
 
@@ -20,10 +20,30 @@ const allowedTargets = configuredMonitorTargets(process.env.MONITOR_TARGETS);
 app.get("/monitor/targets", (_req, res) => res.json({ targets: allowedTargets, configured: allowedTargets.length > 0 }));
 app.get("/monitor/checks", async (_req, res) => {
   // Targets come from operator configuration, never arbitrary request URLs.
-  const results = [];
-  for (const target of allowedTargets.slice(0, 10)) results.push(await probe(target));
-  res.setHeader("Cache-Control", "no-store");
-  res.json({ source: "live", results, summary: summarizeChecks(results.map(result => ({ ok: result.status === "healthy", latencyMs: result.latencyMs }))) });
+  try {
+    const run = await runChecks(allowedTargets);
+    if (!run) { res.status(409).json({ error: "A monitoring run is already in progress" }); return; }
+    const { results, alerts } = run;
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ source: "live", results, alerts, summary: summarizeChecks(results.map(result => ({ ok: result.status === "healthy", latencyMs: result.latencyMs }))) });
+  } catch { res.status(503).json({ error: "Monitoring history is unavailable" }); }
 });
 
+app.get("/monitor/history", (req, res) => {
+  const limit = Number(req.query.limit ?? 100);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 1000) { res.status(400).json({ error: "Invalid history limit" }); return; }
+  try {
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ results: monitoringHistory(limit) });
+  } catch { res.status(503).json({ error: "Monitoring history is unavailable" }); }
+});
+app.get("/monitor/alerts", (_req, res) => {
+  try {
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ alerts: alertsFor(monitoringHistory(1000).reverse()) });
+  } catch { res.status(503).json({ error: "Monitoring history is unavailable" }); }
+});
+
+const interval = Number(process.env.MONITOR_INTERVAL_SECONDS ?? 300);
+startScheduler(allowedTargets, interval);
 app.listen(config.port, () => console.log(`DevPulse API listening on http://localhost:${config.port}`));
