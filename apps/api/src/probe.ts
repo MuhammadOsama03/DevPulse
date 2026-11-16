@@ -1,9 +1,7 @@
 import https from "node:https";
-import { lookup } from "node:dns";
+import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
-import { promisify } from "node:util";
 
-const resolveAll = promisify(lookup);
 export type ProbeResult = { target: string; status: "healthy" | "degraded"; statusCode: number | null; latencyMs: number; checkedAt: string; source: "live" };
 export function isPublicAddress(ip: string): boolean {
   if (isIP(ip) === 4) {
