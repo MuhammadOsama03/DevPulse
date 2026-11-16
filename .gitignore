@@ -5,3 +5,5 @@ dist/
 .env.*
 !.env.example
 *.log
+monitor-history.json
+monitor-history.json.*.tmp
