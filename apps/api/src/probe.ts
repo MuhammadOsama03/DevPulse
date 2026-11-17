@@ -9,12 +9,9 @@ export function isPublicAddress(ip: string): boolean {
     const [a,b,c] = p;
     return !(a === 0 || a === 10 || a === 127 || a >= 224 || a === 169 && b === 254 || a === 172 && b >= 16 && b <= 31 || a === 192 && b === 168 || a === 100 && b >= 64 && b <= 127 || a === 192 && b === 0 && c === 0 || a === 192 && b === 0 && c === 2 || a === 198 && b === 51 && c === 100 || a === 203 && b === 0 && c === 113 || a === 198 && (b === 18 || b === 19));
   }
-  if (isIP(ip) === 6) {
-    const normalized = ip.toLowerCase();
-    // Reject all IPv4-mapped IPv6 forms, including hexadecimal notation.
-    if (normalized.startsWith("::ffff:")) return false;
-    return !(normalized === "::" || normalized === "::1" || normalized.startsWith("fc") || normalized.startsWith("fd") || normalized.startsWith("fe8") || normalized.startsWith("fe9") || normalized.startsWith("fea") || normalized.startsWith("feb") || normalized.startsWith("2001:db8:"));
-  }
+  // Conservative MVP policy: IPv6 targets are not probed until a complete
+  // special-purpose IPv6 range classifier is available.
+  if (isIP(ip) === 6) return false;
   return false;
 }
 export function parseTarget(raw: string): URL {
@@ -31,6 +28,8 @@ export async function probe(raw: string): Promise<ProbeResult> {
   let addresses: {address:string;family:number}[];
   try {
     addresses = await lookup(target.hostname, { all: true, verbatim: true });
+    // Pin the outbound connection to a validated public IPv4 address.
+    // Reject any DNS answer containing non-public addresses to avoid mixed-answer bypasses.
     if (!addresses.length || addresses.some(({address}) => !isPublicAddress(address))) throw new Error("Unsafe DNS result");
   } catch {
     return {target: raw, status: "degraded", statusCode: null, latencyMs: Math.round(performance.now()-start), checkedAt, source: "live"};
