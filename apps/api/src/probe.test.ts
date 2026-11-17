@@ -7,6 +7,11 @@ test("blocks private and metadata IP ranges", () => {
     assert.equal(isPublicAddress(ip), false, ip);
   }
 });
+test("conservatively rejects IPv6 addresses until full classification is implemented", () => {
+  for (const ip of ["2606:4700:4700::1111", "2001:db8::1", "2001::1", "64:ff9b::a00:1"]) {
+    assert.equal(isPublicAddress(ip), false, ip);
+  }
+});
 test("accepts public IPv4", () => assert.equal(isPublicAddress("8.8.8.8"), true));
 test("rejects insecure and credential-bearing targets", () => {
   for (const url of ["http://example.com", "https://user:pass@example.com", "https://127.0.0.1", "https://example.com:8443"]) {
