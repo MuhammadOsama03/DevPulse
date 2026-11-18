@@ -27,7 +27,15 @@ export async function probe(raw: string): Promise<ProbeResult> {
   const checkedAt = new Date().toISOString();
   let addresses: {address:string;family:number}[];
   try {
-    addresses = await Promise.race([lookup(target.hostname, { all: true, verbatim: true }), new Promise<never>((_, reject) => { const timer = setTimeout(() => reject(new Error("DNS timeout")), 3000); timer.unref(); })]);
+    let dnsTimer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      addresses = await Promise.race([
+        lookup(target.hostname, { all: true, verbatim: true }),
+        new Promise<never>((_, reject) => { dnsTimer = setTimeout(() => reject(new Error("DNS timeout")), 3000); }),
+      ]);
+    } finally {
+      if (dnsTimer) clearTimeout(dnsTimer);
+    }
     // Pin the outbound connection to a validated public IPv4 address.
     // Reject any DNS answer containing non-public addresses to avoid mixed-answer bypasses.
     if (!addresses.length || addresses.some(({address}) => !isPublicAddress(address))) throw new Error("Unsafe DNS result");
@@ -49,6 +57,8 @@ export async function probe(raw: string): Promise<ProbeResult> {
       },
       headers: {"User-Agent":"DevPulse-HealthCheck/0.1", "Accept":"*/*"},
     }, res => { res.resume(); finish(res.statusCode ?? null); });
+    const deadline = setTimeout(() => req.destroy(new Error("Probe deadline exceeded")), 5000);
+    req.on("close", () => clearTimeout(deadline));
     req.on("timeout", () => req.destroy(new Error("Probe timeout")));
     req.on("error", () => finish(null));
     req.end();
