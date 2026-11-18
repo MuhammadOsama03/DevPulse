@@ -27,7 +27,7 @@ export async function probe(raw: string): Promise<ProbeResult> {
   const checkedAt = new Date().toISOString();
   let addresses: {address:string;family:number}[];
   try {
-    addresses = await lookup(target.hostname, { all: true, verbatim: true });
+    addresses = await Promise.race([lookup(target.hostname, { all: true, verbatim: true }), new Promise<never>((_, reject) => { const timer = setTimeout(() => reject(new Error("DNS timeout")), 3000); timer.unref(); })]);
     // Pin the outbound connection to a validated public IPv4 address.
     // Reject any DNS answer containing non-public addresses to avoid mixed-answer bypasses.
     if (!addresses.length || addresses.some(({address}) => !isPublicAddress(address))) throw new Error("Unsafe DNS result");
