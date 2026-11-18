@@ -11,7 +11,7 @@
 ## Release blockers / security limitations
 - The monitoring endpoints are not authenticated and a GET request can trigger outbound probes. Do not expose the API publicly without authentication, abuse controls, and operator authorization.
 - The SSRF policy is intentionally conservative: IPv6 DNS answers are rejected. Mixed DNS answers with any unsafe address are also rejected.
-- DNS resolution has no explicit total deadline. HEAD requests have a socket timeout, but full end-to-end latency can exceed it; hardening is required before public hosting.
+- DNS lookup waiting is bounded to 3 seconds and HTTPS request lifetime to 5 seconds after DNS. DNS resolver work cannot be cancelled by this wrapper; a full request can still take about 8 seconds. These limits require live verification before public hosting.
 - Alerts are API-visible consecutive-failure conditions, not email or push notifications.
 - Scheduler runs only while the single API process is alive; file history is not multi-instance safe.
 - No deployment credentials or approved live target list have been supplied.
