@@ -7,7 +7,7 @@ export function corsForOrigins(origins: readonly string[]) {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Vary", "Origin");
       res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
     }
     if (req.method === "OPTIONS" && origin) {
       res.sendStatus(origins.includes(origin) ? 204 : 403);

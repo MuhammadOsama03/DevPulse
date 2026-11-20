@@ -1,17 +1,19 @@
 "use client";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 type Check = {target:string;status:"healthy"|"degraded";statusCode:number|null;latencyMs:number;checkedAt:string;source:"live"};
 type ChecksResponse = {source:"live";results:Check[]};
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 export default function LiveMonitor() {
+  const [token, setToken] = useState("");
+  const authorization: Record<string, string> = token ? {Authorization: `Bearer ${token}`} : {};
   const [checks,setChecks] = useState<Check[]>([]);
   const [loading,setLoading] = useState(false);
   const [error,setError] = useState("");
   const [lastRefresh,setLastRefresh] = useState("");
-  const refresh = useCallback(async () => {
+  async function refresh() {
     setLoading(true);setError("");
     try {
-      const response = await fetch(API+"/monitor/checks",{cache:"no-store",signal:AbortSignal.timeout(65000)});
+      const response = await fetch(API+"/monitor/checks",{cache:"no-store",headers:authorization,signal:AbortSignal.timeout(65000)});
       if (!response.ok) throw new Error(`Monitoring API returned HTTP ${response.status}`);
       const data:ChecksResponse = await response.json();
       if (data.source !== "live" || !Array.isArray(data.results) || !data.results.every(c=>c.source==="live" && typeof c.target==="string" && typeof c.latencyMs==="number" && (c.status==="healthy" || c.status==="degraded"))) throw new Error("Unexpected monitoring response");
@@ -21,7 +23,7 @@ export default function LiveMonitor() {
       setError(e instanceof Error ? e.message : "Monitoring API unavailable");
       setChecks([]);
     } finally {setLoading(false);}
-  },[]);
+  }
   const [history, setHistory] = useState<Check[] | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
@@ -31,7 +33,7 @@ export default function LiveMonitor() {
     setHistoryError("");
     try {
       const response = await fetch(API + "/monitor/history?limit=20", {
-        cache: "no-store", signal: AbortSignal.timeout(10000)
+        cache: "no-store", headers: authorization, signal: AbortSignal.timeout(10000)
       });
       if (!response.ok) throw new Error(`History API returned HTTP ${response.status}`);
       const data = await response.json();
@@ -49,6 +51,8 @@ export default function LiveMonitor() {
   const average = measured.length ? Math.round(measured.reduce((s,c)=>s+c.latencyMs,0)/measured.length) : null;
   const maxLatency = Math.max(1,...checks.map(c=>c.latencyMs));
   return <section className="live" aria-label="Live endpoint monitoring">
+    <label htmlFor="monitor-token">Operator token (if configured)</label>
+    <input id="monitor-token" type="password" value={token} onChange={event => setToken(event.target.value)} autoComplete="off" />
     <div className="demohead"><div><h2>Live endpoint checks</h2><p>Operator-configured HTTPS targets only. Run an on-demand probe or load saved results from the scheduled monitor.</p></div><button disabled={loading} onClick={refresh}>{loading?"Checking…":"Run checks"}</button></div>
     {lastRefresh && <p className="timestamp">Last refreshed: {lastRefresh}</p>}
     {error && <p role="alert" className="liveerror">{error}</p>}

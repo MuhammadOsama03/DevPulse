@@ -9,7 +9,7 @@
 - Set `NEXT_PUBLIC_API_URL` to the reachable API origin at frontend build time.
 
 ## Release blockers / security limitations
-- The monitoring endpoints are not authenticated and a GET request can trigger outbound probes. Do not expose the API publicly without authentication, abuse controls, and operator authorization.
+- Monitoring endpoints support shared-token access. An on-demand check can trigger outbound probes. Do not expose the API publicly without authentication, abuse controls, and operator authorization.
 - The SSRF policy is intentionally conservative: IPv6 DNS answers are rejected. Mixed DNS answers with any unsafe address are also rejected.
 - DNS lookup waiting is bounded to 3 seconds and HTTPS request lifetime to 5 seconds after DNS. DNS resolver work cannot be cancelled by this wrapper; a full request can still take about 8 seconds. These limits require live verification before public hosting.
 - Alerts are API-visible consecutive-failure conditions, not email or push notifications.
@@ -31,3 +31,7 @@
 - Configure an authorized HTTPS target and run a check. Refresh history and confirm the row shows the target, check time, status, and latency.
 - Restart the API using the same history file and confirm the row persists. Loading history should leave the saved record count unchanged.
 - Stop the API and confirm that refreshing history shows an error and leaves the last successful results visible.
+
+### Operator access
+
+Set `DEVPULSE_OPERATOR_TOKEN` to a strong token in the API runtime. Requests to `/monitor/*` must include `Authorization: Bearer <token>`. Enter the same token in the dashboard operator field. Use HTTPS for hosted access. With the variable unset, the API retains its local development behavior.
