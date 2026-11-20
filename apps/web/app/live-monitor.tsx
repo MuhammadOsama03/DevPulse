@@ -22,12 +22,34 @@ export default function LiveMonitor() {
       setChecks([]);
     } finally {setLoading(false);}
   },[]);
+  const [history, setHistory] = useState<Check[] | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+
+  async function loadHistory() {
+    setHistoryLoading(true);
+    setHistoryError("");
+    try {
+      const response = await fetch(API + "/monitor/history?limit=20", {
+        cache: "no-store", signal: AbortSignal.timeout(10000)
+      });
+      if (!response.ok) throw new Error(`History API returned HTTP ${response.status}`);
+      const data = await response.json();
+      if (!Array.isArray(data.results)) throw new Error("Unexpected monitoring history response");
+      setHistory(data.results);
+    } catch (err) {
+      setHistoryError(err instanceof Error ? err.message : "Monitoring history unavailable");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
   const healthy = checks.filter(c=>c.status==="healthy").length;
   const measured = checks.filter(c=>Number.isFinite(c.latencyMs));
   const average = measured.length ? Math.round(measured.reduce((s,c)=>s+c.latencyMs,0)/measured.length) : null;
   const maxLatency = Math.max(1,...checks.map(c=>c.latencyMs));
   return <section className="live" aria-label="Live endpoint monitoring">
-    <div className="demohead"><div><h2>Live endpoint checks</h2><p>Operator-configured HTTPS targets only. Click refresh to run real probes; no background monitoring yet.</p></div><button disabled={loading} onClick={refresh}>{loading?"Checking…":"Run checks"}</button></div>
+    <div className="demohead"><div><h2>Live endpoint checks</h2><p>Operator-configured HTTPS targets only. Run an on-demand probe or load saved results from the scheduled monitor.</p></div><button disabled={loading} onClick={refresh}>{loading?"Checking…":"Run checks"}</button></div>
     {lastRefresh && <p className="timestamp">Last refreshed: {lastRefresh}</p>}
     {error && <p role="alert" className="liveerror">{error}</p>}
     <div className="metrics"><div><small>Configured targets checked</small><strong>{checks.length}</strong></div><div><small>Healthy responses</small><strong>{checks.length ? healthy : "—"}</strong></div><div><small>Average probe duration</small><strong>{average === null ? "—" : average+" ms"}</strong></div></div>
@@ -41,5 +63,21 @@ export default function LiveMonitor() {
       </article>)}
       <p className="timestamp">Bars compare the latest single probe duration for each target. They are not historical trend charts.</p>
     </div>}
+    <section id="monitor-history" className="livechecks" aria-label="Recent monitoring history">
+      <h3>Recent monitoring history</h3>
+      <button type="button" disabled={historyLoading} onClick={loadHistory}>
+        {historyLoading ? "Loading history…" : history ? "Refresh history" : "Load history"}
+      </button>
+      {historyError && <p role="alert" className="liveerror">{historyError}</p>}
+      <div aria-live="polite">
+        {history?.length === 0 && <p>No probes have been recorded.</p>}
+        {history && history.length > 0 && <ol>
+          {history.map((check, index) => <li key={`${check.target}-${check.checkedAt}-${index}`}>
+            <time dateTime={check.checkedAt}>{new Date(check.checkedAt).toLocaleString()}</time>
+            {" · "}{check.target}{" · "}{check.status}{" · "}{check.latencyMs} ms
+          </li>)}
+        </ol>}
+      </div>
+    </section>
   </section>;
 }
