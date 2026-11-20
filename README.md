@@ -16,12 +16,12 @@ See [monitoring and persistence](docs/PERSISTENCE.md) and [security](docs/SECURI
 
 Configure `MONITOR_TARGETS` to authorized public HTTPS URLs, `MONITOR_INTERVAL_SECONDS` (60–3600, default 300), and a persistent `MONITOR_HISTORY_PATH` on your server. Run `npm install` then `npm run dev:api` and `npm run dev:web` from the repository root.
 
-No deployed end-to-end workflow has been verified. The dashboard currently shows the latest checks, not full historical trend charts. The API has no authentication or rate limiting. Do not expose it publicly without additional controls. Persistent history uses a local JSON file, **not PostgreSQL**. Multi-replica deployments are unsupported.
+No deployed end-to-end workflow has been verified. The dashboard shows the latest checks and can load the 20 most recent saved probes. The API has no authentication or rate limiting. Do not expose it publicly without additional controls. Persistent history uses a local JSON file. Multi-replica deployments are unsupported.
 
 ## Remaining work
 
 - Authentication, rate limiting, durable multi-instance storage and notification delivery
-- Dashboard history/trend views, integration and browser tests
+- Historical trend charts, integration and browser tests
 - Deployment configuration, security hardening and live verification
 
 ## Sprint closeout (November 18, 2026)

@@ -24,3 +24,10 @@
 5. Exercise three consecutive controlled failures and verify `/monitor/alerts`.
 6. Verify unauthorized requests are blocked by the deployment gateway and monitoring cannot reach private IPs.
 7. Run backend tests, TypeScript checks and production frontend build.
+
+### Monitoring history UI
+
+- Start the API with a fresh history file and open **History** in the dashboard. Select **Load history** and confirm the empty state.
+- Configure an authorized HTTPS target and run a check. Refresh history and confirm the row shows the target, check time, status, and latency.
+- Restart the API using the same history file and confirm the row persists. Loading history should leave the saved record count unchanged.
+- Stop the API and confirm that refreshing history shows an error and leaves the last successful results visible.
