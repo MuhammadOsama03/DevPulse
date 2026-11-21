@@ -25,7 +25,7 @@ export default function DemoServices() {
     setLoading(true);
     setMessage("Loading…");
     try {
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + "/demo/services");
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? "/api" : "http://localhost:4000")) + "/demo/services");
       if (!response.ok) throw new Error("API unavailable");
       const data: unknown = await response.json();
       if (!isDemoResponse(data)) throw new Error("Unexpected demo response");

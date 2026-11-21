@@ -4,7 +4,7 @@ import type { ProbeResult } from "./probe.js";
 
 export type StoredCheck = ProbeResult;
 const MAX_CHECKS = 1000;
-const filePath = () => process.env.MONITOR_HISTORY_PATH || "./monitor-history.json";
+const filePath = () => process.env.MONITOR_HISTORY_PATH || (process.env.VERCEL === "1" ? "/tmp/devpulse-history.json" : "./monitor-history.json");
 
 export function readHistory(): StoredCheck[] {
   try {

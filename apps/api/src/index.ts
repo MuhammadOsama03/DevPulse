@@ -10,18 +10,25 @@ import { configuredMonitorTargets } from "./targets.js";
 import { summarizeChecks } from "./check-summary.js";
 
 const app = express();
+const router = express.Router();
+const onVercel = process.env.VERCEL === "1";
 app.use(corsForOrigins(config.allowedOrigins));
 app.use(express.json({ limit: "32kb" }));
 
-app.get("/health", (_req, res) => res.json({ status: "ok", service: "devpulse-api", phase: "prototype" }));
-app.get("/demo/services", (_req, res) => res.json(demoPayload(demoServices)));
-app.get("/demo/summary", (_req, res) => res.json(demoSummary(demoServices)));
+router.get("/health", (_req, res) => res.json({ status: "ok", service: "devpulse-api", phase: "prototype" }));
+router.get("/demo/services", (_req, res) => res.json(demoPayload(demoServices)));
+router.get("/demo/summary", (_req, res) => res.json(demoSummary(demoServices)));
 
 const operatorToken = process.env.DEVPULSE_OPERATOR_TOKEN;
 const digest = (value: string) => createHash("sha256").update(value).digest();
+if (onVercel && !operatorToken) {
+  router.use("/monitor", (_req, res) => {
+    res.status(503).json({ error: "Operator token is not configured" });
+  });
+}
 if (operatorToken) {
   const expected = digest(`Bearer ${operatorToken}`);
-  app.use("/monitor", (req, res, next) => {
+  router.use("/monitor", (req, res, next) => {
     if (!timingSafeEqual(digest(req.header("Authorization") ?? ""), expected)) {
       res.setHeader("WWW-Authenticate", "Bearer");
       res.status(401).json({ error: "Valid operator token required" });
@@ -34,7 +41,7 @@ if (operatorToken) {
 type RequestWindow = { startedAt: number; count: number };
 const readWindow: RequestWindow = { startedAt: 0, count: 0 };
 const checkWindow: RequestWindow = { startedAt: 0, count: 0 };
-app.use("/monitor", (req, res, next) => {
+router.use("/monitor", (req, res, next) => {
   const isCheck = /^\/checks\/?$/i.test(req.path);
   const window = isCheck ? checkWindow : readWindow;
   const limit = isCheck ? 6 : 60;
@@ -53,8 +60,8 @@ app.use("/monitor", (req, res, next) => {
 });
 
 const allowedTargets = configuredMonitorTargets(process.env.MONITOR_TARGETS);
-app.get("/monitor/targets", (_req, res) => res.json({ targets: allowedTargets, configured: allowedTargets.length > 0 }));
-app.get("/monitor/checks", async (_req, res) => {
+router.get("/monitor/targets", (_req, res) => res.json({ targets: allowedTargets, configured: allowedTargets.length > 0 }));
+router.get("/monitor/checks", async (_req, res) => {
   // Targets come from operator configuration, never arbitrary request URLs.
   try {
     const run = await runChecks(allowedTargets);
@@ -65,7 +72,7 @@ app.get("/monitor/checks", async (_req, res) => {
   } catch { res.status(503).json({ error: "Monitoring history is unavailable" }); }
 });
 
-app.get("/monitor/history", (req, res) => {
+router.get("/monitor/history", (req, res) => {
   const limit = Number(req.query.limit ?? 100);
   if (!Number.isInteger(limit) || limit < 1 || limit > 1000) { res.status(400).json({ error: "Invalid history limit" }); return; }
   try {
@@ -73,13 +80,19 @@ app.get("/monitor/history", (req, res) => {
     res.json({ results: monitoringHistory(limit) });
   } catch { res.status(503).json({ error: "Monitoring history is unavailable" }); }
 });
-app.get("/monitor/alerts", (_req, res) => {
+router.get("/monitor/alerts", (_req, res) => {
   try {
     res.setHeader("Cache-Control", "no-store");
     res.json({ alerts: alertsFor(monitoringHistory(1000).reverse()) });
   } catch { res.status(503).json({ error: "Monitoring history is unavailable" }); }
 });
 
-const interval = Number(process.env.MONITOR_INTERVAL_SECONDS ?? 300);
-startScheduler(allowedTargets, interval);
-app.listen(config.port, () => console.log(`DevPulse API listening on http://localhost:${config.port}`));
+app.use(onVercel ? "/api" : "/", router);
+
+if (!onVercel) {
+  const interval = Number(process.env.MONITOR_INTERVAL_SECONDS ?? 300);
+  startScheduler(allowedTargets, interval);
+  app.listen(config.port, () => console.log(`DevPulse API listening on http://localhost:${config.port}`));
+}
+
+export default app;

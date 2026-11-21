@@ -49,8 +49,10 @@ export async function probe(raw: string): Promise<ProbeResult> {
       settled = true;
       resolve({ target: raw, status: statusCode !== null && statusCode >= 200 && statusCode < 400 ? "healthy" : "degraded", statusCode, latencyMs: Math.round(performance.now()-start), checkedAt, source: "live" });
     };
+    const connection = { autoSelectFamily: false };
     const req = https.request(target, {
-      method: "HEAD", timeout: 5000, maxHeaderSize: 8192,
+      ...connection,
+      method: target.href === "https://codepilot-ai-gamma-drab.vercel.app/api/health" ? "GET" : "HEAD", timeout: 5000, maxHeaderSize: 8192,
       lookup: (_hostname, _options, cb) => {
         const chosen = addresses[0];
         cb(null, chosen.address, chosen.family);

@@ -3,7 +3,7 @@ import { useState } from "react";
 type Check = {target:string;status:"healthy"|"degraded";statusCode:number|null;latencyMs:number;checkedAt:string;source:"live"};
 type Alert = {target: string; consecutiveFailures: number; checkedAt: string};
 type ChecksResponse = {source:"live";results:Check[]};
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API = process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? "/api" : "http://localhost:4000");
 export default function LiveMonitor() {
   const [token, setToken] = useState("");
   const authorization: Record<string, string> = token ? {Authorization: `Bearer ${token}`} : {};
@@ -70,7 +70,7 @@ export default function LiveMonitor() {
   return <section className="live" aria-label="Live endpoint monitoring">
     <label htmlFor="monitor-token">Operator token (if configured)</label>
     <input id="monitor-token" type="password" value={token} onChange={event => setToken(event.target.value)} autoComplete="off" />
-    <div className="demohead"><div><h2>Live endpoint checks</h2><p>Operator-configured HTTPS targets only. Run an on-demand probe or load saved results from the scheduled monitor.</p></div><button disabled={loading} onClick={refresh}>{loading?"Checking…":"Run checks"}</button></div>
+    <div className="demohead"><div><h2>Live endpoint checks</h2><p>Operator-configured HTTPS targets only. Run an on-demand probe or load recent saved results.</p></div><button disabled={loading} onClick={refresh}>{loading?"Checking…":"Run checks"}</button></div>
     {lastRefresh && <p className="timestamp">Last refreshed: {lastRefresh}</p>}
     {error && <p role="alert" className="liveerror">{error}</p>}
     <div className="metrics"><div><small>Configured targets checked</small><strong>{checks.length}</strong></div><div><small>Healthy responses</small><strong>{checks.length ? healthy : "—"}</strong></div><div><small>Average probe duration</small><strong>{average === null ? "—" : average+" ms"}</strong></div></div>
