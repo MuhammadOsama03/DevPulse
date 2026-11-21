@@ -9,7 +9,7 @@
 - Set `NEXT_PUBLIC_API_URL` to the reachable API origin at frontend build time.
 
 ## Release blockers / security limitations
-- The monitoring endpoints are not authenticated and a GET request can trigger outbound probes. Do not expose the API publicly without authentication, abuse controls, and operator authorization.
+- Monitoring endpoints support shared-token access. An on-demand check can trigger outbound probes. Do not expose the API publicly without authentication, abuse controls, and operator authorization.
 - The SSRF policy is intentionally conservative: IPv6 DNS answers are rejected. Mixed DNS answers with any unsafe address are also rejected.
 - DNS lookup waiting is bounded to 3 seconds and HTTPS request lifetime to 5 seconds after DNS. DNS resolver work cannot be cancelled by this wrapper; a full request can still take about 8 seconds. These limits require live verification before public hosting.
 - Alerts are API-visible consecutive-failure conditions, not email or push notifications.
@@ -24,3 +24,16 @@
 5. Exercise three consecutive controlled failures and verify `/monitor/alerts`.
 6. Verify unauthorized requests are blocked by the deployment gateway and monitoring cannot reach private IPs.
 7. Run backend tests, TypeScript checks and production frontend build.
+
+### Monitoring history UI
+
+- Start the API with a fresh history file and open **History** in the dashboard. Select **Load history** and confirm the empty state.
+- Configure an authorized HTTPS target and run a check. Refresh history and confirm the row shows the target, check time, status, and latency.
+- Restart the API using the same history file and confirm the row persists. Loading history should leave the saved record count unchanged.
+- Stop the API and confirm that refreshing history shows an error and leaves the last successful results visible.
+
+### Operator access
+
+Set `DEVPULSE_OPERATOR_TOKEN` to a strong token in the API runtime. Requests to `/monitor/*` must include `Authorization: Bearer <token>`. Enter the same token in the dashboard operator field. Use HTTPS for hosted access. With the variable unset, the API retains its local development behavior.
+
+Set DEVPULSE_ALLOWED_ORIGINS to the deployed dashboard origin. Per API process, monitoring allows 6 on-demand check requests and 60 other monitoring requests per minute. Excess requests return HTTP 429 with Retry-After. A configured MONITOR_ALERT_WEBHOOK_URL must belong to an approved HTTPS receiver. Delivery posts JSON once when a target enters an alert state, with a five-second timeout and no redirect following. Delivery is best effort, and the dashboard remains the source for active alerts.

@@ -14,14 +14,39 @@ export function alertsFor(history: readonly ProbeResult[], threshold = 3): Monit
   });
 }
 
+async function deliverAlert(alert: MonitorAlert): Promise<void> {
+  const configured = process.env.MONITOR_ALERT_WEBHOOK_URL;
+  if (!configured) return;
+
+  try {
+    const url = new URL(configured);
+    if (url.protocol !== "https:" || url.username || url.password) {
+      throw new Error("Invalid alert webhook configuration");
+    }
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "monitor.alert", ...alert }),
+      redirect: "error",
+      signal: AbortSignal.timeout(5_000),
+    });
+    await response.body?.cancel();
+    if (!response.ok) throw new Error("Alert webhook rejected delivery");
+  } catch {
+    console.error("Monitoring alert webhook delivery failed");
+  }
+}
+
 export async function runChecks(targets: readonly string[]): Promise<{ results: ProbeResult[]; alerts: MonitorAlert[] } | null> {
   if (running) return null;
   running = true;
   try {
     const results: ProbeResult[] = [];
     for (const target of targets.slice(0, 10)) results.push(await probe(target));
-    const history = appendHistory(results);
-    return { results, alerts: alertsFor(history) };
+    const previouslyActive = new Set(alertsFor(readHistory()).map(alert => alert.target));
+    const alerts = alertsFor(appendHistory(results));
+    await Promise.all(alerts.filter(alert => !previouslyActive.has(alert.target)).map(deliverAlert));
+    return { results, alerts };
   } finally {
     running = false;
   }

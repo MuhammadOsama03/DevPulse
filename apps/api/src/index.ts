@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import express from "express";
 import { demoServices } from "./sample.js";
 import { config } from "./config.js";
@@ -15,6 +16,41 @@ app.use(express.json({ limit: "32kb" }));
 app.get("/health", (_req, res) => res.json({ status: "ok", service: "devpulse-api", phase: "prototype" }));
 app.get("/demo/services", (_req, res) => res.json(demoPayload(demoServices)));
 app.get("/demo/summary", (_req, res) => res.json(demoSummary(demoServices)));
+
+const operatorToken = process.env.DEVPULSE_OPERATOR_TOKEN;
+const digest = (value: string) => createHash("sha256").update(value).digest();
+if (operatorToken) {
+  const expected = digest(`Bearer ${operatorToken}`);
+  app.use("/monitor", (req, res, next) => {
+    if (!timingSafeEqual(digest(req.header("Authorization") ?? ""), expected)) {
+      res.setHeader("WWW-Authenticate", "Bearer");
+      res.status(401).json({ error: "Valid operator token required" });
+      return;
+    }
+    next();
+  });
+}
+
+type RequestWindow = { startedAt: number; count: number };
+const readWindow: RequestWindow = { startedAt: 0, count: 0 };
+const checkWindow: RequestWindow = { startedAt: 0, count: 0 };
+app.use("/monitor", (req, res, next) => {
+  const isCheck = /^\/checks\/?$/i.test(req.path);
+  const window = isCheck ? checkWindow : readWindow;
+  const limit = isCheck ? 6 : 60;
+  const now = performance.now();
+  if (now - window.startedAt >= 60_000) {
+    window.startedAt = now;
+    window.count = 0;
+  }
+  if (window.count >= limit) {
+    res.setHeader("Retry-After", String(Math.ceil((60_000 - now + window.startedAt) / 1000)));
+    res.status(429).json({ error: "Monitoring request limit reached" });
+    return;
+  }
+  window.count += 1;
+  next();
+});
 
 const allowedTargets = configuredMonitorTargets(process.env.MONITOR_TARGETS);
 app.get("/monitor/targets", (_req, res) => res.json({ targets: allowedTargets, configured: allowedTargets.length > 0 }));
