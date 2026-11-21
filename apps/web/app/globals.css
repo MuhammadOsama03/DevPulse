@@ -20,20 +20,20 @@ nav { display: flex; gap: clamp(12px, 4vw, 30px); }
 nav a { color: var(--ink); text-decoration: none; font-size: .92rem; }
 nav a:hover { text-decoration: underline; }
 .content { padding-block: 24px; }
-.hero { display: grid; grid-template-columns: 1fr 1fr; min-height: 340px; margin-bottom: 24px; border-radius: 17px; overflow: hidden; color: white; background: #244638; }
+.hero { display: grid; grid-template-columns: 1fr 1fr; min-height: 340px; margin-bottom: 24px; border-block: 1px solid #d8cfc1; color: #252321; background: #eee7dc; }
 .hero-photo { position: relative; min-height: 280px; background: #534739 url('/developer-desk.webp') center / cover no-repeat; }
-.hero-example { position: absolute; right: 16px; bottom: 16px; display: grid; gap: 4px; padding: 12px 16px; border-radius: 10px; background: #fcfbf4; color: var(--ink); font-size: .82rem; box-shadow: 0 4px 15px #172b2540; }
+.hero-example { position: absolute; right: 16px; bottom: 16px; display: grid; gap: 4px; padding: 12px 16px; border: 1px solid #d8cfc1; background: #fcfaf5; color: #252321; font-size: .82rem; }
 .hero-example strong { font-size: .95rem; }
 .hero-example i { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #287353; }
 .hero-copy { padding: clamp(24px, 6vw, 64px); max-width: 660px; }
 h1 { font: 500 clamp(2.65rem, 7vw, 5rem)/.98 Georgia, serif; letter-spacing: -.055em; margin: 0 0 16px; }
-.hero p { margin: 0 0 20px; color: #f3f7ed; }
-.hero a { display: inline-block; background: #f8faee; color: var(--ink); padding: 9px 14px; border-radius: 7px; text-decoration: none; font-weight: 650; }
-.hero a:hover { background: #e4efda; }
+.hero p { margin: 0 0 20px; color: #514a41; }
+.hero a { display: inline-block; background: #292521; color: #fff; padding: 9px 14px; text-decoration: none; font-weight: 650; }
+.hero a:hover { background: #463c32; }
 h2, h3, h4 { line-height: 1.2; margin: 0 0 8px; }
 h2 { font-size: 1.35rem; letter-spacing: -.025em; }
 p { margin: 6px 0 12px; }
-.live, .demo { background: white; border: 1px solid var(--border); border-radius: 14px; padding: clamp(18px, 4vw, 32px); margin-bottom: 16px; }
+.live, .demo { background: white; border: 1px solid var(--border); padding: clamp(18px, 4vw, 32px); margin-bottom: 16px; }
 .demohead, .checktop, .checkmeta, footer { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
 .demohead p, .empty, .timestamp, .checkmeta, footer { color: var(--muted); }
 button, input { font: inherit; }
