@@ -20,6 +20,13 @@ export default function Home() {
             <p>Check your endpoints and see how quickly they respond.</p>
             <a href="#live-monitor">Go to live checks <span aria-hidden="true">↓</span></a>
           </div>
+          <div className="hero-photo">
+            <div className="hero-example">
+              <span>Example check</span>
+              <strong><i aria-hidden="true" /> Healthy · HTTP 200</strong>
+              <span>Response time <b>142 ms</b></span>
+            </div>
+          </div>
         </section>
         <div id="live-monitor">
           <LiveMonitor />
@@ -27,7 +34,7 @@ export default function Home() {
         <DemoServices />
         <footer>
           <p>Scheduled checks require a continuously running API.</p>
-          <a href="https://unsplash.com/photos/rolling-green-hills-covered-in-mist-under-a-cloudy-sky-u4cEGYWtXM0">Landscape photo via Unsplash</a>
+          <a href="https://unsplash.com/photos/macbook-pro-on-brown-wooden-table-nj3HSbsNLGc">Desk photo by Michał Parzuchowski on Unsplash</a>
         </footer>
       </main>
     </>

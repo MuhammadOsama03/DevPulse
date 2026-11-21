@@ -20,7 +20,11 @@ nav { display: flex; gap: clamp(12px, 4vw, 30px); }
 nav a { color: var(--ink); text-decoration: none; font-size: .92rem; }
 nav a:hover { text-decoration: underline; }
 .content { padding-block: 24px; }
-.hero { display: grid; align-items: end; min-height: 340px; margin-bottom: 24px; border-radius: 17px; overflow: hidden; color: white; background: linear-gradient(90deg, #132b22ee, #132b225c 80%), url('/green-hills.webp') center 52% / cover #244638; }
+.hero { display: grid; grid-template-columns: 1fr 1fr; min-height: 340px; margin-bottom: 24px; border-radius: 17px; overflow: hidden; color: white; background: #244638; }
+.hero-photo { position: relative; min-height: 280px; background: #534739 url('/developer-desk.webp') center / cover no-repeat; }
+.hero-example { position: absolute; right: 16px; bottom: 16px; display: grid; gap: 4px; padding: 12px 16px; border-radius: 10px; background: #fcfbf4; color: var(--ink); font-size: .82rem; box-shadow: 0 4px 15px #172b2540; }
+.hero-example strong { font-size: .95rem; }
+.hero-example i { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #287353; }
 .hero-copy { padding: clamp(24px, 6vw, 64px); max-width: 660px; }
 h1 { font: 500 clamp(2.65rem, 7vw, 5rem)/.98 Georgia, serif; letter-spacing: -.055em; margin: 0 0 16px; }
 .hero p { margin: 0 0 20px; color: #f3f7ed; }
@@ -54,7 +58,8 @@ input[type="password"] { display: block; width: min(100%, 300px); margin: 5px 0 
 footer { font-size: .85rem; padding-inline: 4px; }
 @media (max-width: 520px) {
   .masthead-inner, .content { width: calc(100% - 24px); }
-  .hero { min-height: 275px; }
+  .hero { grid-template-columns: 1fr; }
+  .hero-photo { min-height: 250px; }
   .metrics { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
