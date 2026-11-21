@@ -35,3 +35,5 @@
 ### Operator access
 
 Set `DEVPULSE_OPERATOR_TOKEN` to a strong token in the API runtime. Requests to `/monitor/*` must include `Authorization: Bearer <token>`. Enter the same token in the dashboard operator field. Use HTTPS for hosted access. With the variable unset, the API retains its local development behavior.
+
+Set DEVPULSE_ALLOWED_ORIGINS to the deployed dashboard origin. Per API process, monitoring allows 6 on-demand check requests and 60 other monitoring requests per minute. Excess requests return HTTP 429 with Retry-After. A configured MONITOR_ALERT_WEBHOOK_URL must belong to an approved HTTPS receiver. Delivery posts JSON once when a target enters an alert state, with a five-second timeout and no redirect following. Delivery is best effort, and the dashboard remains the source for active alerts.

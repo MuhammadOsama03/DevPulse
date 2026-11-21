@@ -31,6 +31,27 @@ if (operatorToken) {
   });
 }
 
+type RequestWindow = { startedAt: number; count: number };
+const readWindow: RequestWindow = { startedAt: 0, count: 0 };
+const checkWindow: RequestWindow = { startedAt: 0, count: 0 };
+app.use("/monitor", (req, res, next) => {
+  const isCheck = /^\/checks\/?$/i.test(req.path);
+  const window = isCheck ? checkWindow : readWindow;
+  const limit = isCheck ? 6 : 60;
+  const now = performance.now();
+  if (now - window.startedAt >= 60_000) {
+    window.startedAt = now;
+    window.count = 0;
+  }
+  if (window.count >= limit) {
+    res.setHeader("Retry-After", String(Math.ceil((60_000 - now + window.startedAt) / 1000)));
+    res.status(429).json({ error: "Monitoring request limit reached" });
+    return;
+  }
+  window.count += 1;
+  next();
+});
+
 const allowedTargets = configuredMonitorTargets(process.env.MONITOR_TARGETS);
 app.get("/monitor/targets", (_req, res) => res.json({ targets: allowedTargets, configured: allowedTargets.length > 0 }));
 app.get("/monitor/checks", async (_req, res) => {
