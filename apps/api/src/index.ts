@@ -72,18 +72,18 @@ router.get("/monitor/checks", async (_req, res) => {
   } catch { res.status(503).json({ error: "Monitoring history is unavailable" }); }
 });
 
-router.get("/monitor/history", (req, res) => {
+router.get("/monitor/history", async (req, res) => {
   const limit = Number(req.query.limit ?? 100);
   if (!Number.isInteger(limit) || limit < 1 || limit > 1000) { res.status(400).json({ error: "Invalid history limit" }); return; }
   try {
     res.setHeader("Cache-Control", "no-store");
-    res.json({ results: monitoringHistory(limit) });
+    res.json({ results: await monitoringHistory(limit) });
   } catch { res.status(503).json({ error: "Monitoring history is unavailable" }); }
 });
-router.get("/monitor/alerts", (_req, res) => {
+router.get("/monitor/alerts", async (_req, res) => {
   try {
     res.setHeader("Cache-Control", "no-store");
-    res.json({ alerts: alertsFor(monitoringHistory(1000).reverse()) });
+    res.json({ alerts: alertsFor((await monitoringHistory(1000)).reverse()) });
   } catch { res.status(503).json({ error: "Monitoring history is unavailable" }); }
 });
 

@@ -1,5 +1,5 @@
 import { probe, type ProbeResult } from "./probe.js";
-import { appendHistory, readHistory } from "./monitor-store.js";
+import { loadHistory, saveChecks } from "./monitor-store.js";
 import { shouldAlert } from "./alert-policy.js";
 
 let running = false;
@@ -43,8 +43,8 @@ export async function runChecks(targets: readonly string[]): Promise<{ results: 
   try {
     const results: ProbeResult[] = [];
     for (const target of targets.slice(0, 10)) results.push(await probe(target));
-    const previouslyActive = new Set(alertsFor(readHistory()).map(alert => alert.target));
-    const alerts = alertsFor(appendHistory(results));
+    const previouslyActive = new Set(alertsFor(await loadHistory()).map(alert => alert.target));
+    const alerts = alertsFor(await saveChecks(results));
     await Promise.all(alerts.filter(alert => !previouslyActive.has(alert.target)).map(deliverAlert));
     return { results, alerts };
   } finally {
@@ -62,6 +62,6 @@ export function startScheduler(targets: readonly string[], seconds: number): voi
   timer.unref();
 }
 
-export function monitoringHistory(limit = 100): ProbeResult[] {
-  return readHistory().slice(-Math.min(1000, Math.max(1, limit))).reverse();
+export async function monitoringHistory(limit = 100): Promise<ProbeResult[]> {
+  return (await loadHistory()).slice(-Math.min(1000, Math.max(1, limit))).reverse();
 }
