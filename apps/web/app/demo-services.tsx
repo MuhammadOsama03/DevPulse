@@ -38,5 +38,5 @@ export default function DemoServices() {
       setLoading(false);
     }
   }
-  return <section className="demo"><div className="demohead"><div><h2>Service preview</h2><p>Sample records only — no real service checks yet.</p></div><button onClick={load} disabled={loading}>{loading ? "Loading…" : "Load demo data"}</button></div><p role="status">{message}</p><div className="servicelist">{services.map(s => <article key={s.id}><strong>{s.name}</strong><span>{s.status} · {s.latencyMs} ms (sample)</span></article>)}</div></section>;
+  return <section className="demo"><div className="demohead"><div><h2>Service preview</h2><p>Explore the dashboard with sample records.</p></div><button onClick={load} disabled={loading}>{loading ? "Loading…" : "Load demo data"}</button></div><p role="status">{message}</p><div className="servicelist">{services.map(s => <article key={s.id}><strong>{s.name}</strong><span>{s.status} · {s.latencyMs} ms (sample)</span></article>)}</div></section>;
 }

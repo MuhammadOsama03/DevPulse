@@ -1,7 +1,35 @@
-import LiveMonitor from "./live-monitor";
 import DemoServices from "./demo-services";
+import LiveMonitor from "./live-monitor";
+
 export default function Home() {
-  return <main className="layout"><aside className="sidebar"><div className="brand"><span className="brandicon">◈</span> DevPulse</div><p className="navtitle">WORKSPACE</p><div className="navitem">▦ &nbsp; Overview</div><a className="navitem" href="#monitor-history">◷ &nbsp; History</a><div className="sidebarfoot">Early preview · v0.3</div></aside>
-  <div className="content"><header><span>Monitoring / Overview</span><span className="preview">Prototype</span></header><section className="hero"><p className="eyebrow">APPLICATION OBSERVABILITY</p><h1>Know how your apps are doing.</h1><p>Run real HTTPS checks for approved endpoints and inspect current response times. View saved checks from the monitoring history.</p></section>
-  <LiveMonitor/><DemoServices/><div className="notice"><strong>Prototype limitations</strong><p>Scheduled checks require a continuously running API. The service preview uses sample records.</p></div></div></main>;
+  return (
+    <>
+      <header className="masthead">
+        <div className="masthead-inner">
+          <a className="brand" href="#">DevPulse<span>.</span></a>
+          <nav aria-label="Dashboard">
+            <a href="#live-monitor">Live checks</a>
+            <a href="#monitor-history">History</a>
+          </nav>
+        </div>
+      </header>
+      <main className="content">
+        <section className="hero" aria-labelledby="dashboard-title">
+          <div className="hero-copy">
+            <h1 id="dashboard-title">How are your apps doing?</h1>
+            <p>Check your endpoints and see how quickly they respond.</p>
+            <a href="#live-monitor">Go to live checks <span aria-hidden="true">↓</span></a>
+          </div>
+        </section>
+        <div id="live-monitor">
+          <LiveMonitor />
+        </div>
+        <DemoServices />
+        <footer>
+          <p>Scheduled checks require a continuously running API.</p>
+          <a href="https://unsplash.com/photos/rolling-green-hills-covered-in-mist-under-a-cloudy-sky-u4cEGYWtXM0">Landscape photo via Unsplash</a>
+        </footer>
+      </main>
+    </>
+  );
 }
